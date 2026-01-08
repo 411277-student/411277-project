@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>泡泡暴雨挑戰 (評分調整版)</title>
+    <title>接球挑戰</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
@@ -72,8 +72,8 @@
                 
                 <div class="bg-gray-700/50 border border-gray-600 p-4 rounded-lg mb-4 text-sm text-gray-200 text-left">
                     <strong>🏆 挑戰目標：</strong><br>
-                    <span class="text-pink-400 font-bold text-lg">8000分</span> 以上獲得「良好」<br>
-                    <span class="text-green-400 font-bold">7000分</span> 以上獲得「不錯」
+                    <span class="text-red-400 font-bold text-lg">9000分</span> 以上獲得「良好」<br>
+                    <span class="text-green-400 font-bold">8000分</span> 以上獲得「不錯」
                 </div>
 
                 <div class="bg-gray-800/50 p-4 rounded-xl mb-6 text-sm grid grid-cols-2 gap-2 text-left">
@@ -447,12 +447,12 @@
             let text = "";
             let textColorClass = "";
 
-            if (score >= 8000) {
-                // 良好 (粉紅色)
-                bgColorClass = "bg-pink-900/90";
+            if (score >= 9000) {
+                // 良好 (紅色)
+                bgColorClass = "bg-red-900/90";
                 text = "良好";
-                textColorClass = "text-pink-400";
-            } else if (score >= 7000) {
+                textColorClass = "text-red-400";
+            } else if (score >= 8000) {
                 // 不錯 (綠色)
                 bgColorClass = "bg-green-900/90";
                 text = "不錯";
