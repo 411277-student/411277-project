@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>泡泡暴雨挑戰 (網頁終極版)</title>
+    <title>泡泡暴雨挑戰 (評分調整版)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
@@ -70,13 +70,13 @@
                 <h1 class="text-4xl md:text-5xl font-extrabold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">泡泡暴雨</h1>
                 <p class="mb-4 text-gray-300 text-lg">左右移動籃子，盡情接取！</p>
                 
-                <div class="bg-blue-500/20 border border-blue-500/50 p-3 rounded-lg mb-4 text-sm text-blue-200 text-left">
+                <div class="bg-gray-700/50 border border-gray-600 p-4 rounded-lg mb-4 text-sm text-gray-200 text-left">
                     <strong>🏆 挑戰目標：</strong><br>
-                    <span class="text-red-400 font-bold text-lg">11000分</span> 以上獲得「良好」<br>
-                    <span class="text-green-400 font-bold">10000分</span> 以上獲得「不錯」
+                    <span class="text-pink-400 font-bold text-lg">8000分</span> 以上獲得「良好」<br>
+                    <span class="text-green-400 font-bold">7000分</span> 以上獲得「不錯」
                 </div>
 
-                <div class="bg-gray-700/50 p-4 rounded-xl mb-6 text-sm grid grid-cols-2 gap-2 text-left">
+                <div class="bg-gray-800/50 p-4 rounded-xl mb-6 text-sm grid grid-cols-2 gap-2 text-left">
                     <div class="flex items-center"><span class="w-3 h-3 rounded-full bg-red-500 mr-2 shadow-[0_0_8px_rgba(239,68,68,0.8)]"></span> <span class="text-gray-300">80-100分 (10%)</span></div>
                     <div class="flex items-center"><span class="w-3 h-3 rounded-full bg-yellow-500 mr-2"></span> <span class="text-gray-300">60-79分 (20%)</span></div>
                     <div class="flex items-center"><span class="w-3 h-3 rounded-full bg-green-500 mr-2"></span> <span class="text-gray-300">40-59分 (30%)</span></div>
@@ -124,9 +124,9 @@
 
         // --- 實體設定 ---
         const BASKET_CONFIG = {
-            width: 150,    // 寬度 150
+            width: 150,    // 寬度
             height: 20,    // 平板高度
-            speed: 7,      // 移動速度 (接近 Python 的 6)
+            speed: 7,      // 移動速度
             color: '#cbd5e1' // Slate 300
         };
 
@@ -172,12 +172,12 @@
             if (e.key === 'ArrowRight') keys.ArrowRight = false;
         });
 
-        // 手機觸控控制 (點擊螢幕左/右側)
+        // 手機觸控控制
         window.addEventListener('touchstart', e => {
             const touchX = e.touches[0].clientX;
             if (touchX < width / 2) keys.ArrowLeft = true;
             else keys.ArrowRight = true;
-            e.preventDefault(); // 防止滾動
+            e.preventDefault(); 
         }, {passive: false});
         
         window.addEventListener('touchend', e => {
@@ -194,7 +194,7 @@
                 this.x = randomInt(this.radius, width - this.radius);
                 this.y = -this.radius * 2;
                 
-                // === 機率設定 (與 Python 版一致) ===
+                // === 機率設定 ===
                 const chance = Math.random();
                 
                 if (chance < 0.1) { // 10% 紅色 (80-100)
@@ -219,7 +219,7 @@
                     this.textColor = '#e0f2fe';
                 }
                 
-                // 速度：分數越高稍微越快 (3.0 ~ 6.0)
+                // 速度
                 this.speed = (Math.random() * 2 + 3) + (this.score / 100); 
             }
 
@@ -297,13 +297,12 @@
                 for(let i=0; i<count; i++) {
                     bubbles.push(new Bubble());
                 }
-                // 重置計時器 (5-12 幀)
+                // 重置計時器
                 spawnTimer = randomInt(5, 12);
             }
         }
 
         function checkCollisions() {
-            // 籃子範圍
             const bLeft = basket.x;
             const bRight = basket.x + basket.width;
             const bTop = basket.y;
@@ -312,14 +311,13 @@
             for (let i = bubbles.length - 1; i >= 0; i--) {
                 const b = bubbles[i];
                 
-                // 簡單矩形碰撞 (AABB - 實際上是圓形中心檢測最近點)
                 const closestX = Math.max(bLeft, Math.min(b.x, bRight));
                 const closestY = Math.max(bTop, Math.min(b.y, bBottom));
                 const dx = b.x - closestX;
                 const dy = b.y - closestY;
                 const distance = Math.sqrt(dx * dx + dy * dy);
 
-                // 接到 (只要碰到就算)
+                // 接到
                 if (distance < b.radius) {
                     score += b.score;
                     scoreDisplay.textContent = score;
@@ -364,7 +362,6 @@
                 if (particles[i].life <= 0) particles.splice(i, 1);
             }
 
-            // 碰撞
             checkCollisions();
 
             // 時間倒數
@@ -427,7 +424,6 @@
             timeLeft = 60;
             bubbles = [];
             particles = [];
-            // 重置籃子位置
             basket.x = width / 2 - basket.width / 2;
             
             scoreDisplay.textContent = '0';
@@ -446,26 +442,26 @@
             gameState = 'GAME_OVER';
             finalScoreDisplay.textContent = score;
             
-            // 評級邏輯
+            // === 評級邏輯 (更新) ===
             let bgColorClass = "";
             let text = "";
             let textColorClass = "";
 
             if (score >= 8000) {
-                // 良好
-                bgColorClass = "bg-red-900/90";
+                // 良好 (粉紅色)
+                bgColorClass = "bg-pink-900/90";
                 text = "良好";
-                textColorClass = "text-red-400";
+                textColorClass = "text-pink-400";
             } else if (score >= 7000) {
-                // 不錯
+                // 不錯 (綠色)
                 bgColorClass = "bg-green-900/90";
                 text = "不錯";
                 textColorClass = "text-green-400";
             } else {
-                // 待加強
-                bgColorClass = "bg-purple-900/90";
+                // 待加強 (藍色)
+                bgColorClass = "bg-blue-900/90";
                 text = "待加強";
-                textColorClass = "text-purple-400";
+                textColorClass = "text-blue-400";
             }
 
             // 更新 UI
