@@ -2,479 +2,523 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>接球挑戰 (9000分評級版)</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>暗黑風格抽獎輪盤 - 完美調整版</title>
     <style>
+        /* 全局設定 */
         body {
             margin: 0;
+            padding: 0;
+            background-color: #121212;
+            color: #ffffff;
+            font-family: 'Microsoft JhengHei', Arial, sans-serif;
+            display: flex;
+            height: 100vh;
             overflow: hidden;
-            background-color: #0f172a; /* Slate 900 */
-            touch-action: none; /* 防止手機滑動 */
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            user-select: none;
         }
-        canvas {
-            display: block;
-        }
-        #ui-layer {
-            position: absolute;
-            top: 0;
-            left: 0;
+
+        /* 容器 */
+        .container {
+            display: flex;
             width: 100%;
             height: 100%;
+            transition: all 0.5s ease;
+        }
+
+        /* 左側：輪盤區 */
+        .left-section {
+            flex: 2;
+            position: relative;
+            display: flex;
+            /* 讓內容靠底部對齊 */
+            justify-content: flex-end; 
+            align-items: center;
+            background-color: #1a1a1a;
+            border-right: 1px solid #333;
+            transition: all 0.5s ease;
+            overflow: hidden; 
+            flex-direction: column;
+            padding-bottom: 30px; /* 底部稍微留白 */
+        }
+
+        /* 標題：固定在上方 */
+        .page-title {
+            position: absolute;
+            top: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 48px;
+            font-weight: bold;
+            color: #f1c40f;
+            text-shadow: 0 0 10px rgba(241, 196, 15, 0.3);
+            z-index: 10;
+            transition: opacity 0.5s;
+            white-space: nowrap;
+        }
+
+        /* 包裹輪盤與指針的容器 */
+        .wheel-wrapper {
+            position: relative;
+            /* 尺寸加大至 650px */
+            width: 650px;
+            height: 650px;
+            
+            /* 關鍵設定：最大高度扣除上方標題區域，確保不會太近 */
+            /* 100vh - 180px (標題約佔空間) */
+            max-width: 90%;
+            max-height: calc(100vh - 180px); 
+            aspect-ratio: 1 / 1;
+            
+            /* 縮放動畫 4秒 (配合 5秒減速) */
+            transition: transform 4s cubic-bezier(0.25, 1, 0.5, 1); 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transform-origin: center center;
+        }
+
+        /* 輪盤 Canvas */
+        #wheelCanvas {
+            width: 100%;
+            height: 100%;
+            transition: transform 0s;
+        }
+
+        /* 指針容器 */
+        .pointer-container {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 20;
+        }
+        
+        /* 向下的箭頭 */
+        .arrow-down {
+            width: 0; 
+            height: 0; 
+            border-left: 25px solid transparent;
+            border-right: 25px solid transparent;
+            border-top: 50px solid #f1c40f;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.8));
+            transform: translateY(-15px);
+        }
+
+        /* 全螢幕按鈕 */
+        .fullscreen-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: transparent;
+            border: 1px solid #f1c40f;
+            color: #f1c40f;
+            padding: 8px 15px;
+            cursor: pointer;
+            border-radius: 5px;
+            z-index: 100;
+            font-size: 14px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .fullscreen-btn:hover {
+            background: #f1c40f;
+            color: #000;
+        }
+
+        /* 中獎結果文字區 */
+        .result-display {
+            position: absolute;
+            top: 15%; 
+            left: 0;
+            width: 100%;
+            text-align: center;
+            opacity: 0;
+            transform: translateY(-50px);
+            transition: all 1s ease;
+            z-index: 30;
             pointer-events: none;
+        }
+
+        .result-label {
+            font-size: 24px;
+            color: #aaa;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+        }
+
+        .result-text {
+            font-size: 80px;
+            font-weight: bold;
+            color: #f1c40f;
+            text-shadow: 0 0 30px rgba(241, 196, 15, 0.6);
+        }
+        
+        .reset-hint {
+            margin-top: 20px;
+            font-size: 16px;
+            color: #666;
+            animation: blink 2s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
+        /* 右側：控制區 */
+        .right-section {
+            flex: 1;
+            padding: 40px;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
-            padding: 20px;
-            box-sizing: border-box;
-            z-index: 10;
+            background-color: #121212;
+            transition: all 0.5s ease;
+            opacity: 1;
+            transform: translateX(0);
         }
-        /* 按鈕互動效果 */
-        .btn-hover:hover {
-            transform: scale(1.05);
-            box-shadow: 0 0 15px rgba(255,255,255,0.3);
+
+        .input-label { font-size: 18px; margin-bottom: 10px; color: #aaa; }
+
+        textarea {
+            width: 100%; height: 60%;
+            background-color: #2c2c2c; border: 1px solid #444; color: #fff;
+            padding: 15px; font-size: 16px; border-radius: 8px;
+            resize: none; outline: none; box-sizing: border-box; line-height: 1.5;
         }
-        /* 彈出動畫 */
-        @keyframes bounceIn {
-            0% { transform: scale(0.3); opacity: 0; }
-            50% { transform: scale(1.05); opacity: 1; }
-            70% { transform: scale(0.9); }
-            100% { transform: scale(1); }
+        textarea:focus { border-color: #f1c40f; }
+
+        .btn-group { margin-top: 20px; display: flex; gap: 15px; }
+
+        button {
+            flex: 1; padding: 15px; font-size: 18px; font-weight: bold;
+            border: none; border-radius: 8px; cursor: pointer; transition: all 0.2s;
         }
-        .animate-bounce-in {
-            animation: bounceIn 0.6s cubic-bezier(0.215, 0.610, 0.355, 1.000) both;
+        #spinBtn { background-color: #f1c40f; color: #000; }
+        #spinBtn:hover { background-color: #d4ac0d; transform: scale(1.02); }
+        #spinBtn:disabled { background-color: #555; color: #888; cursor: not-allowed; transform: none; }
+
+        /* --- 狀態類別 --- */
+
+        /* 狀態 1: 抽獎中 / 全螢幕模式 (隱藏右側) */
+        body.mode-fullscreen .right-section,
+        body.mode-spinning .right-section {
+            flex: 0; padding: 0; opacity: 0; transform: translateX(100%); overflow: hidden;
+        }
+        body.mode-fullscreen .left-section,
+        body.mode-spinning .left-section {
+            border-right: none;
+        }
+
+        /* 狀態 2: 縮放聚焦 (減速時) */
+        /* 縮放 1.2 倍，並稍微向下平移以保持指針在視覺中心 */
+        body.mode-zoom .wheel-wrapper {
+            transform: scale(1.2) translateY(5%); 
+        }
+        body.mode-zoom .page-title {
+            opacity: 0; 
+        }
+
+        /* 狀態 3: 結果展示 */
+        body.mode-result .right-section {
+            flex: 0; padding: 0; opacity: 0; transform: translateX(100%); overflow: hidden;
+        }
+        body.mode-result .left-section {
+            border-right: none;
+        }
+        body.mode-result .wheel-wrapper {
+            /* 縮小並下移，露出上半部，避免過度下沉導致切邊 */
+            transform: scale(0.7) translateY(120px); 
+        }
+        body.mode-result .result-display {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        body.mode-result .page-title {
+            opacity: 0;
+        }
+
+        @media (max-width: 768px) {
+            .container { flex-direction: column; }
+            .pointer-container { top: 0; }
+            .wheel-wrapper { width: 100%; max-width: 350px; }
+            .result-text { font-size: 50px; }
+            .page-title { font-size: 32px; margin-top: 15px; }
+            .fullscreen-btn { top: 10px; right: 10px; padding: 5px 10px; font-size: 12px; }
+            
+            body.mode-zoom .wheel-wrapper {
+                transform: scale(1.1) translateY(5%);
+            }
         }
     </style>
 </head>
 <body>
 
-    <!-- UI 層 -->
-    <div id="ui-layer">
-        <!-- 頂部 HUD -->
-        <div class="flex justify-between items-start text-white font-mono">
-            <div>
-                <div class="text-xs text-gray-400">SCORE</div>
-                <div id="scoreDisplay" class="text-4xl font-bold text-yellow-400 drop-shadow-md">0</div>
-            </div>
-            <div class="text-right">
-                <div class="text-xs text-gray-400">TIME</div>
-                <div id="timeDisplay" class="text-4xl font-bold drop-shadow-md">60</div>
-            </div>
-        </div>
+<!-- 全螢幕按鈕 -->
+<button class="fullscreen-btn" onclick="toggleFullScreen()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+    </svg>
+    全螢幕
+</button>
+
+<div class="container">
+    <!-- 左側 -->
+    <div class="left-section" id="leftSection">
+        <div class="page-title">抽獎輪盤</div>
         
-        <!-- 開始畫面 -->
-        <div id="startScreen" class="absolute inset-0 flex items-center justify-center bg-black/70 pointer-events-auto backdrop-blur-sm z-20">
-            <div class="text-center text-white p-8 rounded-2xl bg-gray-800/90 border border-gray-600 shadow-2xl max-w-md mx-4 w-full">
-                <h1 class="text-4xl md:text-5xl font-extrabold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">泡泡暴雨</h1>
-                <p class="mb-4 text-gray-300 text-lg">左右移動籃子，盡情接取！</p>
-                
-                <div class="bg-gray-700/50 border border-gray-600 p-4 rounded-lg mb-4 text-sm text-gray-200 text-left">
-                    <strong>🏆 挑戰目標：</strong><br>
-                    <span class="text-red-400 font-bold text-lg">9000分</span> 以上獲得「良好」<br>
-                    <span class="text-green-400 font-bold">8000分</span> 以上獲得「不錯」
-                </div>
-
-                <div class="bg-gray-800/50 p-4 rounded-xl mb-6 text-sm grid grid-cols-2 gap-2 text-left">
-                    <div class="flex items-center"><span class="w-3 h-3 rounded-full bg-red-500 mr-2 shadow-[0_0_8px_rgba(239,68,68,0.8)]"></span> <span class="text-gray-300">80-100分 (10%)</span></div>
-                    <div class="flex items-center"><span class="w-3 h-3 rounded-full bg-yellow-500 mr-2"></span> <span class="text-gray-300">60-79分 (20%)</span></div>
-                    <div class="flex items-center"><span class="w-3 h-3 rounded-full bg-green-500 mr-2"></span> <span class="text-gray-300">40-59分 (30%)</span></div>
-                    <div class="flex items-center"><span class="w-3 h-3 rounded-full bg-blue-500 mr-2"></span> <span class="text-gray-300">20-39分 (40%)</span></div>
-                </div>
-
-                <button id="startBtn" class="btn-hover w-full px-8 py-4 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 rounded-xl text-xl font-bold transition text-white shadow-lg">開始挑戰</button>
-            </div>
+        <!-- 結果顯示區 -->
+        <div class="result-display">
+            <div class="result-label">中獎項目</div>
+            <div class="result-text" id="winnerText"></div>
+            <div class="reset-hint">點擊任意處重新開始</div>
         </div>
 
-        <!-- 遊戲結束畫面 -->
-        <div id="gameOverScreen" class="hidden absolute inset-0 flex items-center justify-center pointer-events-auto backdrop-blur-md z-30 transition-colors duration-700 bg-black/50">
-            <div class="text-center text-white p-10 rounded-3xl bg-black/40 border border-white/10 shadow-2xl animate-bounce-in max-w-lg w-full mx-4 backdrop-blur-xl">
-                
-                <!-- 評價標題 -->
-                <div id="ratingText" class="text-6xl font-black mb-2 drop-shadow-[0_5px_5px_rgba(0,0,0,0.5)] tracking-wider"></div>
-                
-                <p class="text-xl mb-4 text-gray-200 font-medium tracking-wide">最終分數</p>
-                <div id="finalScore" class="text-7xl font-black mb-8 text-white drop-shadow-[0_0_25px_rgba(255,255,255,0.6)] font-mono">0</div>
-                
-                <button id="restartBtn" class="btn-hover w-full px-10 py-4 bg-white text-gray-900 hover:bg-gray-200 rounded-xl text-2xl font-bold transition shadow-lg">再玩一次</button>
+        <!-- 輪盤包裹區 -->
+        <div class="wheel-wrapper">
+            <div class="pointer-container">
+                <div class="arrow-down"></div>
             </div>
+            <!-- Canvas 設定內部解析度 600x600 -->
+            <canvas id="wheelCanvas" width="600" height="600"></canvas>
         </div>
     </div>
 
-    <canvas id="gameCanvas"></canvas>
-
-    <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        const scoreDisplay = document.getElementById('scoreDisplay');
-        const timeDisplay = document.getElementById('timeDisplay');
-        const startScreen = document.getElementById('startScreen');
-        const gameOverScreen = document.getElementById('gameOverScreen');
-        const finalScoreDisplay = document.getElementById('finalScore');
-        const ratingTextDisplay = document.getElementById('ratingText');
-
-        // --- 遊戲變數 ---
-        let gameState = 'START'; // START, PLAYING, GAME_OVER
-        let width, height;
-        let score = 0;
-        let timeLeft = 60;
-        let lastTime = 0;
-        let spawnTimer = 0;
-
-        // --- 實體設定 ---
-        const BASKET_CONFIG = {
-            width: 150,    // 寬度
-            height: 20,    // 平板高度
-            speed: 7,      // 移動速度
-            color: '#cbd5e1' // Slate 300
-        };
-
-        let basket = {
-            x: 0,
-            y: 0,
-            width: BASKET_CONFIG.width,
-            height: BASKET_CONFIG.height,
-            color: BASKET_CONFIG.color
-        };
+    <!-- 右側 -->
+    <div class="right-section">
+        <div class="input-label">請輸入項目名稱 (一行一個)</div>
+        <textarea id="itemsInput" placeholder="例如：&#10;頭獎&#10;二獎&#10;三獎">漢堡
+披薩
+壽司
+牛排
+拉麵
+火鍋</textarea>
         
-        let bubbles = [];
-        let particles = []; 
+        <div class="btn-group">
+            <button id="spinBtn" onclick="startSpin()">開始抽獎</button>
+        </div>
+    </div>
+</div>
 
-        // 按鍵狀態
-        const keys = {
-            ArrowLeft: false,
-            ArrowRight: false
-        };
+<script>
+    const canvas = document.getElementById('wheelCanvas');
+    const ctx = canvas.getContext('2d');
+    const inputArea = document.getElementById('itemsInput');
+    const spinBtn = document.getElementById('spinBtn');
+    const winnerText = document.getElementById('winnerText');
+    const leftSection = document.getElementById('leftSection');
 
-        // --- 初始化與事件 ---
+    // 深色系配色
+    const colors = [
+        '#C0392B', '#8E44AD', '#2980B9', '#16A085', 
+        '#D35400', '#2C3E50', '#7F8C8D', '#27AE60'
+    ];
 
-        function resize() {
-            width = window.innerWidth;
-            height = window.innerHeight;
-            canvas.width = width;
-            canvas.height = height;
-            // 籃子位置重置於底部
-            basket.y = height - 50;
-            // 確保籃子不超出邊界
-            if (basket.x > width - basket.width) basket.x = width - basket.width;
-        }
-        window.addEventListener('resize', resize);
-        resize();
+    let items = [];
+    let startAngle = 0;
+    let arc = 0;
+    let spinTimeout = null;
+    let spinAngleStart = 0; 
+    let currentSpinTime = 0;
+    let totalSpinTime = 0;
+    
+    // 時間設定
+    const CONSTANT_SPIN_TIME = 3000; 
+    const DECEL_SPIN_TIME = 5000; // 5秒減速
+    
+    let isSpinning = false;
+    let isResultMode = false;
 
-        // 鍵盤控制
-        window.addEventListener('keydown', e => {
-            if (e.key === 'ArrowLeft') keys.ArrowLeft = true;
-            if (e.key === 'ArrowRight') keys.ArrowRight = true;
-        });
-        window.addEventListener('keyup', e => {
-            if (e.key === 'ArrowLeft') keys.ArrowLeft = false;
-            if (e.key === 'ArrowRight') keys.ArrowRight = false;
-        });
-
-        // 手機觸控控制
-        window.addEventListener('touchstart', e => {
-            const touchX = e.touches[0].clientX;
-            if (touchX < width / 2) keys.ArrowLeft = true;
-            else keys.ArrowRight = true;
-            e.preventDefault(); 
-        }, {passive: false});
+    // 初始化
+    function init() {
+        updateItems();
+        drawRouletteWheel();
         
-        window.addEventListener('touchend', e => {
-            keys.ArrowLeft = false;
-            keys.ArrowRight = false;
-            e.preventDefault();
-        }, {passive: false});
+        // 監聽全螢幕變化事件
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+        document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+        document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+        document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+    }
 
-        // --- 類別定義 ---
-
-        class Bubble {
-            constructor() {
-                this.radius = randomInt(18, 28);
-                this.x = randomInt(this.radius, width - this.radius);
-                this.y = -this.radius * 2;
-                
-                // === 機率設定 ===
-                const chance = Math.random();
-                
-                if (chance < 0.1) { // 10% 紅色 (80-100)
-                    this.score = randomInt(80, 100);
-                    this.color = '#ef4444'; // Red
-                    this.stroke = '#fee2e2';
-                    this.textColor = '#fff';
-                } else if (chance < 0.3) { // 20% 黃色 (60-79)
-                    this.score = randomInt(60, 79);
-                    this.color = '#eab308'; // Yellow
-                    this.stroke = '#fef08a';
-                    this.textColor = '#fff';
-                } else if (chance < 0.6) { // 30% 綠色 (40-59)
-                    this.score = randomInt(40, 59);
-                    this.color = '#22c55e'; // Green
-                    this.stroke = '#dcfce7';
-                    this.textColor = '#fff';
-                } else { // 40% 藍色 (20-39)
-                    this.score = randomInt(20, 39);
-                    this.color = '#3b82f6'; // Blue
-                    this.stroke = '#dbeafe';
-                    this.textColor = '#e0f2fe';
-                }
-                
-                // 速度
-                this.speed = (Math.random() * 2 + 3) + (this.score / 100); 
-            }
-
-            update() {
-                this.y += this.speed;
-            }
-
-            draw() {
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-                ctx.fillStyle = this.color;
-                ctx.fill();
-                
-                // 外框
-                ctx.lineWidth = 2;
-                ctx.strokeStyle = this.stroke;
-                ctx.stroke();
-
-                // 高光
-                ctx.beginPath();
-                ctx.arc(this.x - this.radius*0.3, this.y - this.radius*0.3, this.radius/3.5, 0, Math.PI * 2);
-                ctx.fillStyle = 'rgba(255,255,255,0.4)';
-                ctx.fill();
-
-                // 顯示分數
-                ctx.fillStyle = this.textColor;
-                ctx.font = 'bold 16px Arial';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText(this.score, this.x, this.y + 1);
-            }
+    inputArea.addEventListener('input', () => {
+        if (!isSpinning) {
+            updateItems();
+            drawRouletteWheel();
         }
+    });
 
-        class Particle {
-            constructor(x, y, color) {
-                this.x = x;
-                this.y = y;
-                this.color = color;
-                this.size = Math.random() * 4 + 2;
-                this.speedX = (Math.random() - 0.5) * 8;
-                this.speedY = (Math.random() - 0.5) * 8;
-                this.life = 1.0;
-            }
-            update() {
-                this.x += this.speedX;
-                this.y += this.speedY;
-                this.life -= 0.05;
-            }
-            draw() {
-                ctx.globalAlpha = Math.max(0, this.life);
-                ctx.fillStyle = this.color;
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.globalAlpha = 1.0;
-            }
-        }
+    function updateItems() {
+        const text = inputArea.value;
+        items = text.split('\n').filter(item => item.trim() !== '');
+        if (items.length === 0) items = ['請輸入項目'];
+        arc = Math.PI * 2 / items.length;
+    }
 
-        // --- 輔助函式 ---
-        function randomInt(min, max) {
-            return Math.floor(Math.random() * (max - min + 1)) + min;
-        }
+    function drawRouletteWheel() {
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+        const outsideRadius = 280; 
+        const textRadius = 190;
+        const insideRadius = 0;
 
-        // --- 遊戲邏輯 ---
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.strokeStyle = "#1a1a1a";
+        ctx.lineWidth = 2;
+        ctx.font = 'bold 40px "Microsoft JhengHei", Helvetica, Arial';
 
-        function spawnBubbles() {
-            spawnTimer--;
-            if (spawnTimer <= 0) {
-                // 隨機生成 1-3 個
-                let count = 1;
-                const r = Math.random();
-                if (r > 0.6) count = 2;
-                if (r > 0.85) count = 3;
-
-                for(let i=0; i<count; i++) {
-                    bubbles.push(new Bubble());
-                }
-                // 重置計時器
-                spawnTimer = randomInt(5, 12);
-            }
-        }
-
-        function checkCollisions() {
-            const bLeft = basket.x;
-            const bRight = basket.x + basket.width;
-            const bTop = basket.y;
-            const bBottom = basket.y + basket.height;
-
-            for (let i = bubbles.length - 1; i >= 0; i--) {
-                const b = bubbles[i];
-                
-                const closestX = Math.max(bLeft, Math.min(b.x, bRight));
-                const closestY = Math.max(bTop, Math.min(b.y, bBottom));
-                const dx = b.x - closestX;
-                const dy = b.y - closestY;
-                const distance = Math.sqrt(dx * dx + dy * dy);
-
-                // 接到
-                if (distance < b.radius) {
-                    score += b.score;
-                    scoreDisplay.textContent = score;
-                    
-                    // UI 動畫
-                    scoreDisplay.style.transform = "scale(1.3)";
-                    scoreDisplay.style.color = b.color;
-                    setTimeout(() => {
-                        scoreDisplay.style.transform = "scale(1)";
-                        scoreDisplay.style.color = "#facc15";
-                    }, 100);
-
-                    // 粒子特效
-                    for(let j=0; j<8; j++) {
-                        particles.push(new Particle(b.x, b.y, b.color));
-                    }
-                    bubbles.splice(i, 1);
-                }
-                // 沒接到
-                else if (b.y - b.radius > height) {
-                    bubbles.splice(i, 1);
-                }
-            }
-        }
-
-        function update() {
-            // 移動籃子
-            if (keys.ArrowLeft) basket.x -= BASKET_CONFIG.speed;
-            if (keys.ArrowRight) basket.x += BASKET_CONFIG.speed;
-
-            // 邊界檢查
-            if (basket.x < 0) basket.x = 0;
-            if (basket.x > width - basket.width) basket.x = width - basket.width;
-
-            // 泡泡生成與移動
-            spawnBubbles();
-            bubbles.forEach(b => b.update());
-
-            // 粒子更新
-            for (let i = particles.length - 1; i >= 0; i--) {
-                particles[i].update();
-                if (particles[i].life <= 0) particles.splice(i, 1);
-            }
-
-            checkCollisions();
-
-            // 時間倒數
-            const now = Math.floor(Date.now() / 1000);
-            if (now > lastTime) {
-                timeLeft--;
-                timeDisplay.textContent = timeLeft;
-                if (timeLeft <= 10) {
-                    timeDisplay.classList.add('text-red-500', 'animate-pulse');
-                }
-                lastTime = now;
-                
-                if (timeLeft <= 0) {
-                    endGame();
-                }
-            }
-        }
-
-        function draw() {
-            ctx.clearRect(0, 0, width, height);
-
-            // 畫籃子
-            ctx.fillStyle = basket.color;
-            ctx.shadowColor = 'rgba(6, 182, 212, 0.5)';
-            ctx.shadowBlur = 15;
-            ctx.fillRect(basket.x, basket.y, basket.width, basket.height);
-            ctx.shadowBlur = 0; 
-
-            // 籃子裝飾線
-            ctx.strokeStyle = '#fff';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(basket.x, basket.y, basket.width, basket.height);
+        for(let i = 0; i < items.length; i++) {
+            const angle = startAngle + i * arc;
             
-            // 籃子紋理
+            ctx.fillStyle = colors[i % colors.length];
             ctx.beginPath();
-            for(let i=15; i<basket.width; i+=15) {
-                ctx.moveTo(basket.x + i, basket.y);
-                ctx.lineTo(basket.x + i, basket.y + basket.height);
-            }
-            ctx.strokeStyle = 'rgba(0,0,0,0.1)';
+            ctx.arc(centerX, centerY, outsideRadius, angle, angle + arc, false);
+            ctx.arc(centerX, centerY, insideRadius, angle + arc, angle, true);
             ctx.stroke();
+            ctx.fill();
 
-            // 畫物件
-            bubbles.forEach(b => b.draw());
-            particles.forEach(p => p.draw());
+            ctx.save();
+            ctx.fillStyle = "#FFFFFF";
+            ctx.translate(centerX + Math.cos(angle + arc / 2) * textRadius, 
+                          centerY + Math.sin(angle + arc / 2) * textRadius);
+            ctx.rotate(angle + arc / 2 + Math.PI / 2);
+            
+            const text = items[i];
+            const displayText = text.length > 5 ? text.substring(0, 4) + '..' : text;
+            ctx.fillText(displayText, -ctx.measureText(displayText).width / 2, 0);
+            ctx.restore();
         }
+        
+        // 中心裝飾
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, 15, 0, 2 * Math.PI);
+        ctx.fillStyle = "#ffffff";
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, 8, 0, 2 * Math.PI);
+        ctx.fillStyle = "#1a1a1a";
+        ctx.fill();
+    }
 
-        function gameLoop() {
-            if (gameState !== 'PLAYING') return;
-            update();
-            draw();
-            requestAnimationFrame(gameLoop);
-        }
-
-        // --- 遊戲流程控制 ---
-
-        function startGame() {
-            gameState = 'PLAYING';
-            score = 0;
-            timeLeft = 60;
-            bubbles = [];
-            particles = [];
-            basket.x = width / 2 - basket.width / 2;
-            
-            scoreDisplay.textContent = '0';
-            timeDisplay.textContent = '60';
-            timeDisplay.classList.remove('text-red-500', 'animate-pulse');
-            
-            startScreen.classList.add('hidden');
-            gameOverScreen.classList.add('hidden');
-            gameOverScreen.className = "hidden absolute inset-0 flex items-center justify-center pointer-events-auto backdrop-blur-md z-30 transition-colors duration-700 bg-black/50";
-            
-            lastTime = Math.floor(Date.now() / 1000);
-            requestAnimationFrame(gameLoop);
-        }
-
-        function endGame() {
-            gameState = 'GAME_OVER';
-            finalScoreDisplay.textContent = score;
-            
-            // === 評級邏輯 (更新) ===
-            let bgColorClass = "";
-            let text = "";
-            let textColorClass = "";
-
-            if (score >= 9000) {
-                // 良好 (紅色)
-                bgColorClass = "bg-red-900/90";
-                text = "良好";
-                textColorClass = "text-red-400";
-            } else if (score >= 8000) {
-                // 不錯 (綠色)
-                bgColorClass = "bg-green-900/90";
-                text = "不錯";
-                textColorClass = "text-green-400";
-            } else {
-                // 待加強 (藍色)
-                bgColorClass = "bg-blue-900/90";
-                text = "待加強";
-                textColorClass = "text-blue-400";
+    // 全螢幕切換功能
+    function toggleFullScreen() {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(err => {
+                alert(`無法進入全螢幕: ${err.message}`);
+            });
+        } else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
             }
+        }
+    }
 
-            // 更新 UI
-            gameOverScreen.className = `absolute inset-0 flex items-center justify-center pointer-events-auto backdrop-blur-md z-30 transition-colors duration-700 ${bgColorClass}`;
-            ratingTextDisplay.textContent = text;
-            ratingTextDisplay.className = `text-6xl font-black mb-2 drop-shadow-[0_5px_5px_rgba(0,0,0,0.5)] tracking-wider ${textColorClass}`;
-            
-            gameOverScreen.classList.remove('hidden');
+    // 處理全螢幕變化
+    function handleFullscreenChange() {
+        if (document.fullscreenElement) {
+            document.body.classList.add('mode-fullscreen');
+        } else {
+            document.body.classList.remove('mode-fullscreen');
+        }
+    }
+
+    function startSpin() {
+        if (isSpinning) return;
+        if (items.length < 2 && items[0] === '請輸入項目') {
+            alert("請至少輸入兩個項目");
+            return;
         }
 
-        document.getElementById('startBtn').addEventListener('click', startGame);
-        document.getElementById('restartBtn').addEventListener('click', startGame);
+        isSpinning = true;
+        spinBtn.disabled = true;
+        inputArea.disabled = true;
 
-    </script>
+        document.body.classList.add('mode-spinning');
+
+        currentSpinTime = 0;
+        totalSpinTime = CONSTANT_SPIN_TIME + DECEL_SPIN_TIME; 
+        spinAngleStart = Math.random() * 10 + 30; 
+        
+        rotateWheel();
+    }
+
+    function rotateWheel() {
+        currentSpinTime += 30; 
+
+        if (currentSpinTime >= CONSTANT_SPIN_TIME && currentSpinTime < CONSTANT_SPIN_TIME + 100) {
+             document.body.classList.add('mode-zoom');
+        }
+
+        if (currentSpinTime >= totalSpinTime) {
+            stopRotateWheel();
+            return;
+        }
+
+        let spinAngle = 0;
+        if (currentSpinTime < CONSTANT_SPIN_TIME) {
+            spinAngle = spinAngleStart;
+        } else {
+            const decelTime = currentSpinTime - CONSTANT_SPIN_TIME;
+            spinAngle = spinAngleStart - easeOut(decelTime, 0, spinAngleStart, DECEL_SPIN_TIME);
+        }
+
+        startAngle += (spinAngle * Math.PI / 180);
+        drawRouletteWheel();
+        spinTimeout = requestAnimationFrame(rotateWheel);
+    }
+
+    function stopRotateWheel() {
+        const degrees = startAngle * 180 / Math.PI + 90;
+        const arcd = arc * 180 / Math.PI;
+        const index = Math.floor((360 - degrees % 360) / arcd);
+        winnerText.innerText = items[index];
+        
+        ctx.save();
+        drawRouletteWheel();
+        ctx.restore();
+
+        setTimeout(() => {
+            document.body.classList.remove('mode-zoom'); 
+            document.body.classList.remove('mode-spinning');
+            
+            void document.body.offsetWidth; 
+
+            document.body.classList.add('mode-result');
+            isResultMode = true;
+        }, 1000);
+    }
+
+    leftSection.addEventListener('click', () => {
+        if (isResultMode) {
+            resetGame();
+        }
+    });
+
+    function resetGame() {
+        isSpinning = false;
+        isResultMode = false;
+        spinBtn.disabled = false;
+        inputArea.disabled = false;
+        
+        document.body.classList.remove('mode-result');
+        document.body.classList.remove('mode-zoom');
+        document.body.classList.remove('mode-spinning');
+        
+        if (!document.fullscreenElement) {
+             document.body.classList.remove('mode-fullscreen');
+        }
+    }
+
+    function easeOut(t, b, c, d) {
+        const ts = (t/=d)*t;
+        const tc = ts*t;
+        return b+c*(tc + -3*ts + 3*t);
+    }
+
+    init();
+
+</script>
+
 </body>
 </html>
