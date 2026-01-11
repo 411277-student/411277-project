@@ -50,7 +50,10 @@
             justify-content: center;
             align-items: center;
             /* 基準點：上方 15% 處 (靠近指針) */
-            transform-origin: center 15%; 
+            transform-origin: center 15%;
+            
+            /* 初始狀態放大 1.2 倍並下移 */
+            transform: scale(1.2) translateY(8%);
         }
 
         /* 標題：72px 超大字體 */
@@ -195,9 +198,8 @@
         }
 
         /* 狀態 2: 縮放聚焦 (減速時放大) */
-        /* Scale 2.5 放大倍率提高，配合 origin: 15% 可將圓心推至畫面外 */
         body.mode-zoom .wheel-wrapper {
-            transform: scale(2.5) translateY(15%); 
+            transform: scale(2.5) translateY(25%); 
         }
         body.mode-zoom .page-title {
             opacity: 0; 
@@ -212,11 +214,9 @@
         }
         
         body.mode-result .wheel-wrapper {
-            /* 修改：Scale 改為 1.6 (原2.0的0.8倍)
-               修改：TranslateY 改為 65% (原50%)，因為圓縮小後圓心會往上跑，
-                     所以要加深下移距離，確保圓心依然藏在畫面下方。
-            */
-            transform: translateY(65%) scale(1.6); 
+            /* 修改：倍率改為 1.5 */
+            /* 維持 translateY 100%，確保圓心被推到畫面下方不可見 */
+            transform: translateY(100%) scale(1.5); 
         }
 
         /* 結果文字動畫觸發 */
@@ -243,12 +243,13 @@
             /* 手機版標題大小 */
             .page-title { font-size: 48px; top: 15px; }
             
+            /* 手機版同步調整 */
             body.mode-zoom .wheel-wrapper {
-                transform: scale(2.2) translateY(15%);
+                transform: scale(2.2) translateY(25%);
             }
             body.mode-result .wheel-wrapper {
-                /* 手機版同步調整：Scale 1.45, TranslateY 60% */
-                transform: translateY(60%) scale(1.45);
+                /* 手機版同步：倍率 1.5, 下移 100% */
+                transform: translateY(100%) scale(1.5);
             }
         }
     </style>
