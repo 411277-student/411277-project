@@ -199,13 +199,14 @@
 
         /* 狀態 2: 縮放聚焦 (減速時放大 2.5倍) */
         body.mode-zoom .wheel-wrapper {
-            transform: scale(2.5) translateY(25%); 
+            /* 最大時位移固定為 30% */
+            transform: scale(2.5) translateY(30%); 
         }
         body.mode-zoom .page-title {
             opacity: 0; 
         }
 
-        /* 狀態 3: 結果展示 (修改處) */
+        /* 狀態 3: 結果展示 (精確計算修正) */
         body.mode-result .right-section {
             flex: 0; padding: 0; opacity: 0; transform: translateX(100%); overflow: hidden;
         }
@@ -214,12 +215,10 @@
         }
         
         body.mode-result .wheel-wrapper {
-            /* 修改：
-               Scale: 最大縮放(2.5)的 0.9 倍 => 2.25 
-               TranslateY: 維持與縮放時相同的 25% 
-               順序調整為 scale 先，translate 後，以保持座標系一致性與平滑度
+            /* Scale: 2.25 (最大值的0.9倍)
+               TranslateY: 調整為 37.5%，以補償縮小造成的視覺上移，確保圓心位置與 scale(2.5) translateY(30%) 時一致。
             */
-            transform: scale(2.25) translateY(25%); 
+            transform: scale(2.25) translateY(37.5%); 
         }
 
         /* 結果文字動畫觸發 */
@@ -248,16 +247,15 @@
             
             /* 手機版縮放聚焦 (2.2倍) */
             body.mode-zoom .wheel-wrapper {
-                transform: scale(2.2) translateY(25%);
+                transform: scale(2.2) translateY(30%);
             }
             
-            /* 手機版結果展示 (修改處) */
+            /* 手機版結果展示 */
             body.mode-result .wheel-wrapper {
-                /* 手機版：
-                   Scale: 2.2 * 0.9 = 1.98 (約 2.0)
-                   TranslateY: 25% (與上方一致)
+                /* Scale: 2.0 (約為2.2的0.9倍)
+                   TranslateY: 調整為 36.5% 以維持圓心位置不變
                 */
-                transform: scale(2.0) translateY(25%);
+                transform: scale(2.0) translateY(36.5%);
             }
         }
     </style>
