@@ -197,7 +197,7 @@
             border-right: none;
         }
 
-        /* 狀態 2: 縮放聚焦 (減速時放大) */
+        /* 狀態 2: 縮放聚焦 (減速時放大 2.5倍) */
         body.mode-zoom .wheel-wrapper {
             transform: scale(2.5) translateY(25%); 
         }
@@ -214,9 +214,12 @@
         }
         
         body.mode-result .wheel-wrapper {
-            /* 修改：倍率改為 1.5 */
-            /* 維持 translateY 100%，確保圓心被推到畫面下方不可見 */
-            transform: translateY(100%) scale(1.5); 
+            /* 修改：
+               Scale: 最大縮放(2.5)的 0.9 倍 => 2.25 
+               TranslateY: 維持與縮放時相同的 25% 
+               順序調整為 scale 先，translate 後，以保持座標系一致性與平滑度
+            */
+            transform: scale(2.25) translateY(25%); 
         }
 
         /* 結果文字動畫觸發 */
@@ -243,13 +246,18 @@
             /* 手機版標題大小 */
             .page-title { font-size: 48px; top: 15px; }
             
-            /* 手機版同步調整 */
+            /* 手機版縮放聚焦 (2.2倍) */
             body.mode-zoom .wheel-wrapper {
                 transform: scale(2.2) translateY(25%);
             }
+            
+            /* 手機版結果展示 (修改處) */
             body.mode-result .wheel-wrapper {
-                /* 手機版同步：倍率 1.5, 下移 100% */
-                transform: translateY(100%) scale(1.5);
+                /* 手機版：
+                   Scale: 2.2 * 0.9 = 1.98 (約 2.0)
+                   TranslateY: 25% (與上方一致)
+                */
+                transform: scale(2.0) translateY(25%);
             }
         }
     </style>
