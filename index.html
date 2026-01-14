@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>暗黑風格抽獎輪盤 - 最終修正版</title>
+    <title>暗黑風格抽獎輪盤 - 最終修正版 V5</title>
     <style>
         /* 全局設定 */
         body {
@@ -102,35 +102,48 @@
             transform: translateY(-15px);
         }
 
-        /* 中獎結果顯示區 */
+        /* 中獎結果顯示區 (包含標籤、結果文字、重置提示) */
         .result-display {
             position: absolute;
-            top: 15%; 
+            top: 0%; 
             left: 0;
             width: 100%;
             text-align: center;
             z-index: 30;
             pointer-events: none;
+            
+            /* 修改：使用 Flexbox 讓三者垂直排列，並控制間距 */
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: flex-start;
+            
+            /* 修改：設定 padding-top，避免太貼頂 */
+            padding-top: 40px; 
+            
+            /* 修改：設定統一間距，確保三者距離相等 */
+            gap: 15px; 
         }
 
         .result-label {
             font-size: 24px;
             color: #aaa;
             letter-spacing: 2px;
-            margin-bottom: 10px;
+            /* 移除原本的 margin-bottom，改用 gap 控制 */
+            margin-bottom: 0; 
             opacity: 0;
             transform: translateY(-20px);
             transition: all 0.5s ease;
         }
 
         .result-text {
-            font-size: 80px;
+            /* 修改：縮小 20% (180px * 0.8 = 144px) */
+            font-size: 144px;
             font-weight: bold;
             color: #f1c40f;
             text-shadow: 0 0 30px rgba(241, 196, 15, 0.6);
+            /* 移除行高影響，確保間距準確 */
+            line-height: 1.1; 
             opacity: 0; /* 初始隱藏 */
             transform: scale(0.5); /* 初始縮小 */
         }
@@ -142,12 +155,16 @@
             100% { opacity: 1; transform: scale(1); }
         }
 
+        /* 重置提示 (現在位於 result-display 內部) */
         .reset-hint {
-            margin-top: 20px;
+            /* 修改：移除絕對定位，使其跟隨上方文字流動 */
+            position: static; 
+            
             font-size: 16px;
             color: #666;
             opacity: 0;
             transition: opacity 1s ease 1s; /* 延遲顯示 */
+            pointer-events: none;
         }
         
         .reset-hint.show {
@@ -172,7 +189,7 @@
             transform: translateX(0);
         }
 
-        /* 修改：標籤文字放大改為 2.5 倍 (18px * 2.5 = 45px) */
+        /* 標籤文字 (2.5 倍) */
         .input-label { font-size: 45px; margin-bottom: 20px; color: #aaa; font-weight: bold; }
 
         textarea {
@@ -185,7 +202,7 @@
 
         .btn-group { margin-top: 20px; display: flex; gap: 15px; }
 
-        /* 修改：按鈕文字放大改為 2.5 倍 (18px * 2.5 = 45px)，padding 微調 */
+        /* 按鈕文字 (2.5 倍) */
         button {
             flex: 1; padding: 20px; font-size: 45px; font-weight: bold;
             border: none; border-radius: 12px; cursor: pointer; transition: all 0.2s;
@@ -206,7 +223,7 @@
 
         /* 狀態 2: 縮放聚焦 (減速時放大 2.5倍) */
         body.mode-zoom .wheel-wrapper {
-            /* 修改：translateY 上移 10% (從 30% 減為 20%) */
+            /* translateY 20% */
             transform: scale(2.5) translateY(20%); 
         }
         body.mode-zoom .page-title {
@@ -222,7 +239,7 @@
         }
         
         body.mode-result .wheel-wrapper {
-            /* 修改：translateY 上移 10% (從 37.5% 減為 27.5%) */
+            /* translateY 27.5% */
             transform: scale(2.25) translateY(27.5%); 
         }
 
@@ -246,20 +263,22 @@
             /* 手機版同樣使用響應式單位，稍微加大一點佔比 */
             .wheel-wrapper { width: 75vw; height: 75vw; }
             #wheelCanvas { width: 100%; height: 100%; }
-            .result-text { font-size: 50px; }
+            
+            /* 修改：手機版文字縮小 20% (110px * 0.8 = 88px) */
+            .result-text { font-size: 88px; }
             
             /* 手機版標題大小 */
             .page-title { font-size: 48px; top: 15px; }
             
             /* 手機版縮放聚焦 (2.2倍) */
             body.mode-zoom .wheel-wrapper {
-                /* 修改：translateY 上移 10% (從 30% 減為 20%) */
+                /* translateY 20% */
                 transform: scale(2.2) translateY(20%);
             }
             
             /* 手機版結果展示 */
             body.mode-result .wheel-wrapper {
-                /* 修改：translateY 上移 10% (從 36.5% 減為 26.5%) */
+                /* translateY 26.5% */
                 transform: scale(2.0) translateY(26.5%);
             }
         }
@@ -272,7 +291,7 @@
     <div class="left-section" id="leftSection">
         <div class="page-title">抽獎輪盤</div>
         
-        <!-- 結果顯示區 -->
+        <!-- 結果顯示區 (結構修改：將重置提示放入其中) -->
         <div class="result-display">
             <div class="result-label">中獎項目</div>
             <div class="result-text" id="winnerText"></div>
@@ -284,7 +303,7 @@
             <div class="pointer-container">
                 <div class="arrow-down"></div>
             </div>
-            <!-- 修改：提高 Canvas 解析度以適應大螢幕縮放 -->
+            <!-- 提高 Canvas 解析度以適應大螢幕縮放 -->
             <canvas id="wheelCanvas" width="1000" height="1000"></canvas>
         </div>
     </div>
@@ -328,8 +347,7 @@
     let currentSpinTime = 0;
     let totalSpinTime = 0;
     
-    // 修改 2: 時間設定 (單位: ms)
-    // 減速時間增加 5000ms，從 3000 變為 8000
+    // 時間設定 (單位: ms)
     const CONSTANT_SPIN_TIME = 3000; // 恆定轉動 3秒
     const DECEL_SPIN_TIME = 8000;    // 減速 8秒 (原3秒 + 5秒)
     
@@ -357,7 +375,7 @@
     }
 
     function drawRouletteWheel() {
-        // 修改：動態計算尺寸，不使用寫死的像素值
+        // 動態計算尺寸，不使用寫死的像素值
         const centerX = canvas.width / 2;
         const centerY = canvas.height / 2;
         // 基於 1000px 寬度換算比例 (原 230/500 = 0.46)
@@ -370,7 +388,7 @@
         ctx.strokeStyle = "#1a1a1a";
         ctx.lineWidth = 2;
         
-        // 修改：字體大小改為動態 (原 36/500 = 0.072)
+        // 字體大小改為動態 (原 36/500 = 0.072)
         const fontSize = Math.floor(canvas.width * 0.072);
         ctx.font = `bold ${fontSize}px "Microsoft JhengHei", Helvetica, Arial`;
 
@@ -476,8 +494,7 @@
         drawRouletteWheel();
         ctx.restore();
 
-        // 修改 3: 立即切換到結果畫面，不再等待
-        // 移除 setTimeout 延遲
+        // 立即切換到結果畫面，不再等待
         
         document.body.classList.remove('mode-zoom'); 
         document.body.classList.remove('mode-spinning');
