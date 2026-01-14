@@ -42,8 +42,10 @@
         /* 包裹輪盤與指針的容器 */
         .wheel-wrapper {
             position: relative;
-            width: 500px;
-            height: 500px;
+            /* 修改：改用 vmin 響應式單位 (視窗寬高的 60%)，讓圓隨螢幕變大 */
+            width: 60vmin;
+            height: 60vmin;
+            
             /* 縮放動畫時間設為 2秒 */
             transition: transform 2s cubic-bezier(0.25, 1, 0.5, 1); 
             display: flex;
@@ -74,6 +76,9 @@
 
         /* 輪盤 Canvas */
         #wheelCanvas {
+            /* 確保 Canvas 填滿容器 */
+            width: 100%;
+            height: 100%;
             transition: transform 0s;
         }
 
@@ -237,8 +242,9 @@
         @media (max-width: 768px) {
             .container { flex-direction: column; }
             .pointer-container { top: 0; }
-            .wheel-wrapper { width: 300px; height: 300px; }
-            #wheelCanvas { width: 300px; height: 300px; }
+            /* 手機版同樣使用響應式單位，稍微加大一點佔比 */
+            .wheel-wrapper { width: 75vw; height: 75vw; }
+            #wheelCanvas { width: 100%; height: 100%; }
             .result-text { font-size: 50px; }
             
             /* 手機版標題大小 */
@@ -278,7 +284,8 @@
             <div class="pointer-container">
                 <div class="arrow-down"></div>
             </div>
-            <canvas id="wheelCanvas" width="500" height="500"></canvas>
+            <!-- 修改：提高 Canvas 解析度以適應大螢幕縮放 -->
+            <canvas id="wheelCanvas" width="1000" height="1000"></canvas>
         </div>
     </div>
 
@@ -350,18 +357,22 @@
     }
 
     function drawRouletteWheel() {
+        // 修改：動態計算尺寸，不使用寫死的像素值
         const centerX = canvas.width / 2;
         const centerY = canvas.height / 2;
-        const outsideRadius = 230;
-        const textRadius = 160;
+        // 基於 1000px 寬度換算比例 (原 230/500 = 0.46)
+        const outsideRadius = canvas.width * 0.46;
+        // (原 160/500 = 0.32)
+        const textRadius = canvas.width * 0.32;
         const insideRadius = 0;
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.strokeStyle = "#1a1a1a";
         ctx.lineWidth = 2;
         
-        // 字體設定 (隨標題放大，這裡也稍微大一點)
-        ctx.font = 'bold 36px "Microsoft JhengHei", Helvetica, Arial';
+        // 修改：字體大小改為動態 (原 36/500 = 0.072)
+        const fontSize = Math.floor(canvas.width * 0.072);
+        ctx.font = `bold ${fontSize}px "Microsoft JhengHei", Helvetica, Arial`;
 
         for(let i = 0; i < items.length; i++) {
             const angle = startAngle + i * arc;
@@ -386,13 +397,13 @@
             ctx.restore();
         }
         
-        // 中心裝飾
+        // 中心裝飾 (比例縮放)
         ctx.beginPath();
-        ctx.arc(centerX, centerY, 15, 0, 2 * Math.PI);
+        ctx.arc(centerX, centerY, canvas.width * 0.03, 0, 2 * Math.PI); // 15px -> 3%
         ctx.fillStyle = "#ffffff";
         ctx.fill();
         ctx.beginPath();
-        ctx.arc(centerX, centerY, 8, 0, 2 * Math.PI);
+        ctx.arc(centerX, centerY, canvas.width * 0.016, 0, 2 * Math.PI); // 8px -> 1.6%
         ctx.fillStyle = "#1a1a1a";
         ctx.fill();
     }
